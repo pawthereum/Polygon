@@ -1563,7 +1563,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 
 
-contract Pawthereum is
+contract PawthereumMike1 is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -1619,16 +1619,17 @@ contract Pawthereum is
         inSwapAndLiquify = false;
     }
 
-    constructor() public ERC20("Pawthereum", "PAWTH") {
+    constructor() public ERC20("PawthereumMike1", "PAWTHM1") {
         _setupContractId("ChildERC20");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, address(0xb5505a6d998549090530911180f38aC5130101c6));
-        _initializeEIP712("Pawthereum");
+        _initializeEIP712("PawthereumMike1");
 
         charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         contractOwner = _msgSender();
+        excludeFromTax(_msgSender());
     }
 
     // This is to support Native meta transactions
