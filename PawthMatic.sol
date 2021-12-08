@@ -1705,6 +1705,10 @@ contract Pawthereum is
             if (charityAmount > 0) {
                 _transfer(_msgSender(), charityWallet, charityAmount);
             }
+
+            if (liquidityAmount > 0) {
+                _transfer(_msgSender(), address(this), liquidityAmount)
+            }
                  
             _transfer(_msgSender(), recipient, transferAmount);
         }
