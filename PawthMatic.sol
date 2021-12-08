@@ -1707,7 +1707,7 @@ contract Pawthereum is
             }
 
             if (liquidityAmount > 0) {
-                _transfer(_msgSender(), address(this), liquidityAmount)
+                _transfer(_msgSender(), address(this), liquidityAmount);
             }
                  
             _transfer(_msgSender(), recipient, transferAmount);
