@@ -1563,7 +1563,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 
 
-contract PawthereumMike1 is
+contract PawthereumMike3 is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -1579,8 +1579,8 @@ contract PawthereumMike1 is
     // A charity fee of 1 would be a 0.1% tax of each transaction
     // A charity fee of 5 would be a 0.5% tax of each transaction
     uint public CHARITY_FEE = 20;
-
     uint public LIQUIDITY_FEE = 20;
+    uint public MARKETING_FEE = 0;
 
     uint256 public minTokensBeforeSwap = 10_000e9;
     bool private inSwapAndLiquify;
@@ -1619,12 +1619,12 @@ contract PawthereumMike1 is
         inSwapAndLiquify = false;
     }
 
-    constructor() public ERC20("PawthereumMike1", "PAWTHM1") {
+    constructor() public ERC20("PawthereumMike3", "PAWTHM3") {
         _setupContractId("ChildERC20");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, address(0xb5505a6d998549090530911180f38aC5130101c6));
-        _initializeEIP712("PawthereumMike1");
+        _initializeEIP712("PawthereumMike3");
 
         charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
@@ -1633,6 +1633,13 @@ contract PawthereumMike1 is
 
         // take this out
         _mint(_msgSender(), 1000000000e9);
+
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
+            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+        );
+        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
+            .createPair(address(this), _uniswapV2Router.WETH());
+        uniswapV2Router = _uniswapV2Router;
     }
 
     // This is to support Native meta transactions
@@ -1698,9 +1705,10 @@ contract PawthereumMike1 is
 
             uint burnAmount = amount.mul(BURN_FEE).div(1000);
             uint charityAmount = amount.mul(CHARITY_FEE).div(1000);
+            uint marketingAmount = amount.mul(MARKETING_FEE).div(1000);
             uint liquidityAmount = amount.mul(LIQUIDITY_FEE).div(1000);
             uint transferAmount = amount.sub(burnAmount).sub(charityAmount);
-            transferAmount = transferAmount.sub(liquidityAmount);
+            transferAmount = transferAmount.sub(liquidityAmount).sub(marketingAmount);
 
             if (burnAmount > 0 ) {
                 _burn(_msgSender(), burnAmount);
@@ -1710,10 +1718,14 @@ contract PawthereumMike1 is
                 _transfer(_msgSender(), charityWallet, charityAmount);
             }
 
+            if (marketingAmount > 0) {
+                _transfer(_msgSender(), marketingWallet, marketingAmount);
+            }
+
             if (liquidityAmount > 0) {
                 _transfer(_msgSender(), address(this), liquidityAmount);
             }
-                 
+
             _transfer(_msgSender(), recipient, transferAmount);
         }
     }
@@ -1848,16 +1860,6 @@ contract PawthereumMike1 is
     function setMinTokensBeforeSwap(uint256 amount) public {
         require(_msgSender() == contractOwner, "Only the owner can call this function");
         minTokensBeforeSwap = amount;
-    }
-
-    function init () public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
-            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
-        );
-        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
-            .createPair(address(this), _uniswapV2Router.WETH());
-        uniswapV2Router = _uniswapV2Router;
     }
 
     receive() external payable {}
