@@ -1630,6 +1630,9 @@ contract PawthereumMike1 is
         marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         contractOwner = _msgSender();
         excludeFromTax(_msgSender());
+
+        // take this out
+        _mint(_msgSender(), 1000000000e9);
     }
 
     // This is to support Native meta transactions
@@ -1842,13 +1845,20 @@ contract PawthereumMike1 is
         marketingWallet = _newMarketingAddress;
     }
 
+    function setMinTokensBeforeSwap(uint256 amount) public {
+        require(_msgSender() == contractOwner, "Only the owner can call this function");
+        minTokensBeforeSwap = amount;
+    }
+
     function init () public {
         require(_msgSender() == contractOwner, "Only the owner can call this function");
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
-            0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff
+            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
         );
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
         uniswapV2Router = _uniswapV2Router;
     }
+
+    receive() external payable {}
 }
