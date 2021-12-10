@@ -1563,7 +1563,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 
 
-contract PawthereumMike8 is
+contract PawthereumMike11 is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -1623,12 +1623,12 @@ contract PawthereumMike8 is
         inSwapAndLiquify = false;
     }
 
-    constructor() public ERC20("PawthereumMike8", "PAWTHM8") {
+    constructor() public ERC20("PawthereumMike11", "PAWTHM11") {
         _setupContractId("ChildERC20");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, address(0xb5505a6d998549090530911180f38aC5130101c6));
-        _initializeEIP712("PawthereumMike8");
+        _initializeEIP712("PawthereumMike11");
 
         charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
@@ -1692,46 +1692,7 @@ contract PawthereumMike8 is
     }
 
     function transfer(address recipient, uint256 amount) public override returns (bool){
-        if (excludedFromTax[_msgSender()] == true || excludedFromTax[recipient] == true) {
-            _transfer(_msgSender(), recipient, amount);
-        }
-        else {
-            uint256 contractTokenBalance = balanceOf(address(this));
-            bool overMinTokenBalance = contractTokenBalance >= minTokensBeforeSwap;
-            if (
-                !inSwapAndLiquify &&
-                overMinTokenBalance &&
-                _msgSender() != uniswapV2Pair &&
-                swapAndLiquifyEnabled
-            ) {
-                swapAndLiquify(contractTokenBalance);
-            }
-
-            uint burnAmount = amount.mul(BURN_FEE).div(1000);
-            uint charityAmount = amount.mul(CHARITY_FEE).div(1000);
-            uint marketingAmount = amount.mul(MARKETING_FEE).div(1000);
-            uint liquidityAmount = amount.mul(LIQUIDITY_FEE).div(1000);
-            uint transferAmount = amount.sub(burnAmount).sub(charityAmount);
-            transferAmount = transferAmount.sub(liquidityAmount).sub(marketingAmount);
-
-            if (burnAmount > 0 ) {
-                _burn(_msgSender(), burnAmount);
-            }
-
-            if (charityAmount > 0) {
-                _transfer(_msgSender(), charityWallet, charityAmount);
-            }
-
-            if (marketingAmount > 0) {
-                _transfer(_msgSender(), marketingWallet, marketingAmount);
-            }
-
-            if (liquidityAmount > 0) {
-                _transfer(_msgSender(), address(this), liquidityAmount);
-            }
-
-            _transfer(_msgSender(), recipient, transferAmount);
-        }
+        _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
@@ -1816,11 +1777,66 @@ contract PawthereumMike8 is
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        _beforeTokenTransfer(sender, recipient, amount);
+        if (excludedFromTax[sender] == true || excludedFromTax[recipient] == true) {
+            _beforeTokenTransfer(sender, recipient, amount);
 
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
-        _balances[recipient] = _balances[recipient].add(amount);
-        emit Transfer(sender, recipient, amount);
+            _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+            _balances[recipient] = _balances[recipient].add(amount);
+            emit Transfer(sender, recipient, amount);
+        }
+        else {
+            uint256 contractTokenBalance = balanceOf(address(this));
+            bool overMinTokenBalance = contractTokenBalance >= minTokensBeforeSwap;
+            if (
+                !inSwapAndLiquify &&
+                overMinTokenBalance &&
+                _msgSender() != uniswapV2Pair &&
+                swapAndLiquifyEnabled
+            ) {
+                swapAndLiquify(contractTokenBalance);
+            }
+
+            uint burnAmount = amount.mul(BURN_FEE).div(1000);
+            uint charityAmount = amount.mul(CHARITY_FEE).div(1000);
+            uint marketingAmount = amount.mul(MARKETING_FEE).div(1000);
+            uint liquidityAmount = amount.mul(LIQUIDITY_FEE).div(1000);
+            uint transferAmount = amount.sub(burnAmount).sub(charityAmount);
+            transferAmount = transferAmount.sub(liquidityAmount).sub(marketingAmount);
+
+            if (burnAmount > 0 ) {
+                _burn(_msgSender(), burnAmount);
+            }
+
+            if (charityAmount > 0) {
+                _beforeTokenTransfer(sender, charityWallet, charityAmount);
+
+                _balances[sender] = _balances[sender].sub(charityAmount, "ERC20: transfer amount exceeds balance");
+                _balances[charityWallet] = _balances[charityWallet].add(charityAmount);
+                emit Transfer(sender, charityWallet, charityAmount);
+            }
+
+            if (marketingAmount > 0) {
+                _beforeTokenTransfer(sender, marketingWallet, marketingAmount);
+
+                _balances[sender] = _balances[sender].sub(marketingAmount, "ERC20: transfer amount exceeds balance");
+                _balances[marketingWallet] = _balances[marketingWallet].add(marketingAmount);
+                emit Transfer(sender, marketingWallet, marketingAmount);
+            }
+
+            if (liquidityAmount > 0) {
+                _beforeTokenTransfer(sender, address(this), liquidityAmount);
+
+                _balances[sender] = _balances[sender].sub(liquidityAmount, "ERC20: transfer amount exceeds balance");
+                _balances[address(this)] = _balances[address(this)].add(liquidityAmount);
+                emit Transfer(sender, address(this), liquidityAmount);
+            }
+
+            _beforeTokenTransfer(sender, recipient, transferAmount);
+
+            _balances[sender] = _balances[sender].sub(transferAmount, "ERC20: transfer amount exceeds balance");
+            _balances[recipient] = _balances[recipient].add(transferAmount);
+            emit Transfer(sender, recipient, transferAmount);
+        }
     }
 
     function _mint(address account, uint256 amount) internal virtual override {
