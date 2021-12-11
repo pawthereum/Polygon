@@ -1,3 +1,6 @@
+/**
+ *Submitted for verification at polygonscan.com on 2021-12-10
+*/
 
 // File: @openzeppelin/contracts/GSN/Context.sol
 
@@ -1563,7 +1566,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 
 
-contract PawthereumMike11 is
+contract PawthereumPolyTest is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -1623,23 +1626,20 @@ contract PawthereumMike11 is
         inSwapAndLiquify = false;
     }
 
-    constructor() public ERC20("PawthereumMike11", "PAWTHM11") {
+    constructor() public ERC20("PawthereumPolyTest", "PAWTHPT") {
         _setupContractId("ChildERC20");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, address(0xb5505a6d998549090530911180f38aC5130101c6));
-        _initializeEIP712("PawthereumMike11");
+        _initializeEIP712("PawthereumPolyTest");
 
         charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         contractOwner = _msgSender();
         excludeFromTax(_msgSender());
 
-        // take this out
-        _mint(_msgSender(), 1000000000e9);
-
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
-            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+            0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff
         );
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
