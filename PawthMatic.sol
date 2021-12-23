@@ -1950,6 +1950,7 @@ contract GrumpyPolyTest4 is
     }
 
     function setUniswapRouter (address _newRouter) public {
+        // if you need to call this function, leave liquidity where it is, call this, then move it
         require(_msgSender() == contractOwner, "Only the owner can call this function");
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             address(_newRouter)
