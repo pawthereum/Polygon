@@ -1562,7 +1562,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 
 
-contract GrumpyPolyTest4 is
+contract PolyPawthBeta is
     ERC20,
     IChildToken,
     AccessControlMixin,
@@ -1622,12 +1622,12 @@ contract GrumpyPolyTest4 is
         inSwapAndLiquify = false;
     }
 
-    constructor() public ERC20("GrumpyPolyTest4", "GPT4") {
+    constructor() public ERC20("PolyPawthBeta", "PPB") {
         _setupContractId("ChildERC20");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(DEPOSITOR_ROLE, address(0xb5505a6d998549090530911180f38aC5130101c6));
-        _initializeEIP712("GrumpyPolyTest4");
+        _initializeEIP712("PolyPawthBeta");
 
         charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
@@ -1635,8 +1635,8 @@ contract GrumpyPolyTest4 is
         excludeFromTax(_msgSender());
 
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
-            //0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff // quickswap
-            0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506 // sushiswap
+            0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff // quickswap
+            // 0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506 // sushiswap
         );
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
@@ -1958,6 +1958,12 @@ contract GrumpyPolyTest4 is
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
         uniswapV2Router = _uniswapV2Router;
+    }
+
+    function withdrawEthToOwner (uint256 _amount) public {
+        require(_msgSender() == contractOwner, "Only the owner can call this function");
+        require(_amount <= address(this).balance, "Not enough ETH in contract balance");
+        payable(owner).transfer(_amount);
     }
 
     receive() external payable {}
