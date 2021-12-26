@@ -1885,73 +1885,60 @@ contract PolyPawthBeta is
     }
 
     // owner functions
-    function transferOwnership(address newOwner) public {
-        require(_msgSender() == contractOwner, "Only the  can call this function");
+    function transferOwnership(address newOwner) onlyOwner public {
         contractOwner = newOwner;
     }
 
-    function setCharityTax(uint256 fee) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setCharityTax(uint256 fee) onlyOwner public {
         require(fee <=20, "Charity fee cannot be higher than 2%");
         CHARITY_FEE = fee;
     }
 
-    function setBurnTax(uint256 fee) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setBurnTax(uint256 fee) onlyOwner public {
         require(fee <=20, "Burn fee cannot be higher than 2%");
         BURN_FEE = fee;
     }
 
-    function setLiqTax(uint256 fee) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setLiqTax(uint256 fee) onlyOwner public {
         require(fee <=20, "Liquidity fee cannot be higher than 2%");
         LIQUIDITY_FEE = fee;
     }
 
-    function setLpTokenHolder(address _newLpTokenHolder) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setLpTokenHolder(address _newLpTokenHolder) onlyOwner public {
         lpTokenHolder = _newLpTokenHolder;
     }
 
-    function setPair(address pair) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setPair(address pair) onlyOwner public {
         uniswapV2Pair = pair;
     }
 
-    function setSwapAndLiquifyEnabled(bool enabled) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setSwapAndLiquifyEnabled(bool enabled) onlyOwner public {
         swapAndLiquifyEnabled = enabled;
         SwapAndLiquifyEnabledUpdated(enabled);
     }
 
-    function setMaxTxAmount(uint256 amount) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setMaxTxAmount(uint256 amount) onlyOwner public {
         maxTxAmount = amount;
     }
 
-    function renounceOwnership() public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function renounceOwnership() onlyOwner public {
         contractOwner = deadAddress;
     }
 
-    function setCharityWallet(address newCharityAddress) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setCharityWallet(address newCharityAddress) onlyOwner public {
         charityWallet = newCharityAddress;
     }
 
-    function setMarketingWallet(address _newMarketingAddress) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setMarketingWallet(address _newMarketingAddress) onlyOwner public {
         marketingWallet = _newMarketingAddress;
     }
 
-    function setMinTokensBeforeSwap(uint256 amount) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function setMinTokensBeforeSwap(uint256 amount) onlyOwner public {
         minTokensBeforeSwap = amount;
     }
 
-    function setUniswapRouter (address _newRouter) public {
+    function setUniswapRouter (address _newRouter) onlyOwner public {
         // if you need to call this function, leave liquidity where it is, call this, then move it
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(
             address(_newRouter)
         );
@@ -1960,10 +1947,14 @@ contract PolyPawthBeta is
         uniswapV2Router = _uniswapV2Router;
     }
 
-    function withdrawEthToOwner (uint256 _amount) public {
-        require(_msgSender() == contractOwner, "Only the owner can call this function");
+    function withdrawEthToOwner (uint256 _amount) onlyOwner public {
         require(_amount <= address(this).balance, "Not enough ETH in contract balance");
-        payable(owner).transfer(_amount);
+        payable(contractOwner).transfer(_amount);
+    }
+
+    modifier onlyOwner {
+      require(_msgSender() == contractOwner, "Only the owner can call this function");
+      _;
     }
 
     receive() external payable {}
