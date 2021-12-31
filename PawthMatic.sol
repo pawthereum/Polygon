@@ -1582,8 +1582,10 @@ contract PolyPawthBeta is
     // A charity fee of 1 would be a 0.1% tax of each transaction
     // A charity fee of 5 would be a 0.5% tax of each transaction
     uint public CHARITY_FEE = 20;
-    uint public LIQUIDITY_FEE = 20;
+    uint public LIQUIDITY_FEE = 900; // super high taxes on launch to avoid sniping
     uint public MARKETING_FEE = 0;
+    uint public STAKING_FEE = 0;
+    uint public MAX_TOTAL_FEE = 1200; // total tax fee cannot exceed 12%
 
     uint256 public minTokensBeforeSwap = 10_000e9;
     bool private inSwapAndLiquify;
@@ -1594,9 +1596,10 @@ contract PolyPawthBeta is
 
     // If ownership is renounced, the contract owner is set to the dead address
     address public deadAddress = 0x000000000000000000000000000000000000dEaD;
-
-    address public charityWallet;
-    address public marketingWallet;
+    // wallets for taxes
+    address public charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
+    address public marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
+    address public stakingWallet = 0x5a185c361dd4573f1Bb8044d5D8275e25831b53e;
 
     // Specify a mapping of addresses that are excluded from the tax
     mapping(address => bool) public excludedFromTax;
@@ -1629,8 +1632,6 @@ contract PolyPawthBeta is
         _setupRole(DEPOSITOR_ROLE, address(0xb5505a6d998549090530911180f38aC5130101c6));
         _initializeEIP712("PolyPawthBeta");
 
-        charityWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
-        marketingWallet = 0xa56891cfBd0175E6Fc46Bf7d647DE26100e95C78;
         contractOwner = _msgSender();
         excludeFromTax(_msgSender());
 
@@ -1797,8 +1798,9 @@ contract PolyPawthBeta is
             uint charityAmount = amount.mul(CHARITY_FEE).div(1000);
             uint marketingAmount = amount.mul(MARKETING_FEE).div(1000);
             uint liquidityAmount = amount.mul(LIQUIDITY_FEE).div(1000);
+            uint stakingAmount = amount.mul(STAKING_FEE).div(1000);
             uint transferAmount = amount.sub(burnAmount).sub(charityAmount);
-            transferAmount = transferAmount.sub(liquidityAmount).sub(marketingAmount);
+            transferAmount = transferAmount.sub(liquidityAmount).sub(marketingAmount).sub(stakingAmount);
 
             if (burnAmount > 0 ) {
                 _balances[sender] = _balances[sender].sub(burnAmount, "ERC20: transfer amount exceeds balance");
@@ -1828,6 +1830,14 @@ contract PolyPawthBeta is
                 _balances[sender] = _balances[sender].sub(liquidityAmount, "ERC20: transfer amount exceeds balance");
                 _balances[address(this)] = _balances[address(this)].add(liquidityAmount);
                 emit Transfer(sender, address(this), liquidityAmount);
+            }
+
+            if (stakingAmount > 0) {
+                _beforeTokenTransfer(sender, stakingWallet, stakingAmount);
+
+                _balances[sender] = _balances[sender].sub(stakingAmount, "ERC20: transfer amount exceeds balance");
+                _balances[stakingWallet] = _balances[stakingWallet].add(stakingAmount);
+                emit Transfer(sender, stakingWallet, stakingAmount);
             }
 
             _beforeTokenTransfer(sender, recipient, transferAmount);
@@ -1892,18 +1902,38 @@ contract PolyPawthBeta is
     }
 
     function setCharityTax(uint256 fee) onlyOwner public {
-        require(fee <=20, "Charity fee cannot be higher than 2%");
+        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(fee);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
+
         CHARITY_FEE = fee;
     }
 
     function setBurnTax(uint256 fee) onlyOwner public {
-        require(fee <=20, "Burn fee cannot be higher than 2%");
+        uint feeTotal = CHARITY_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(fee);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
+
         BURN_FEE = fee;
     }
 
     function setLiqTax(uint256 fee) onlyOwner public {
-        require(fee <=20, "Liquidity fee cannot be higher than 2%");
+        uint feeTotal = CHARITY_FEE.add(BURN_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(fee);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
+
         LIQUIDITY_FEE = fee;
+    }
+
+    function setMarketingTax(uint256 fee) onlyOwner public {
+        uint feeTotal = CHARITY_FEE.add(BURN_FEE).add(LIQUIDITY_FEE).add(STAKING_FEE).add(fee);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
+
+        MARKETING_FEE = fee;
+    }
+
+    function setStakingTax(uint256 fee) onlyOwner public {
+        uint feeTotal = CHARITY_FEE.add(BURN_FEE).add(LIQUIDITY_FEE).add(MARKETING_FEE).add(fee);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
+
+        STAKING_FEE = fee;
     }
 
     function setLpTokenHolder(address _newLpTokenHolder) onlyOwner public {
@@ -1935,6 +1965,10 @@ contract PolyPawthBeta is
         marketingWallet = _newMarketingAddress;
     }
 
+    function setStakingWallet(address _newStakingAddress) onlyOwner public {
+        stakingWallet = _newStakingAddress;
+    }
+
     function setMinTokensBeforeSwap(uint256 amount) onlyOwner public {
         minTokensBeforeSwap = amount;
     }
@@ -1947,6 +1981,12 @@ contract PolyPawthBeta is
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
         uniswapV2Router = _uniswapV2Router;
+    }
+
+    function withdrawTokenToOwner(address _tokenAddress, uint256 _amount) onlyOwner public {
+        uint256 balance = ERC20(_tokenAddress).balanceOf(address(this));
+        require(balance >= _amount, "Insufficient token balance");
+        ERC20(_tokenAddress).transfer(contractOwner, _amount);
     }
 
     function withdrawEthToOwner (uint256 _amount) onlyOwner public {
