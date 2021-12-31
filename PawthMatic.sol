@@ -1902,38 +1902,33 @@ contract PolyPawthBeta is
     }
 
     function setCharityTax(uint256 fee) onlyOwner public {
-        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(fee);
-        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
-
         CHARITY_FEE = fee;
+        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(CHARITY_FEE);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
     }
 
     function setBurnTax(uint256 fee) onlyOwner public {
-        uint feeTotal = CHARITY_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(fee);
-        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
-
         BURN_FEE = fee;
+        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(CHARITY_FEE);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
     }
 
     function setLiqTax(uint256 fee) onlyOwner public {
-        uint feeTotal = CHARITY_FEE.add(BURN_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(fee);
-        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
-
         LIQUIDITY_FEE = fee;
+        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(CHARITY_FEE);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
     }
 
     function setMarketingTax(uint256 fee) onlyOwner public {
-        uint feeTotal = CHARITY_FEE.add(BURN_FEE).add(LIQUIDITY_FEE).add(STAKING_FEE).add(fee);
-        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
-
         MARKETING_FEE = fee;
+        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(CHARITY_FEE);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
     }
 
     function setStakingTax(uint256 fee) onlyOwner public {
-        uint feeTotal = CHARITY_FEE.add(BURN_FEE).add(LIQUIDITY_FEE).add(MARKETING_FEE).add(fee);
-        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
-
         STAKING_FEE = fee;
+        uint feeTotal = BURN_FEE.add(LIQUIDITY_FEE).add(MARKETING_FEE).add(STAKING_FEE).add(CHARITY_FEE);
+        require(feeTotal <= MAX_TOTAL_FEE, "Total fee cannot exceed maximum");
     }
 
     function setLpTokenHolder(address _newLpTokenHolder) onlyOwner public {
