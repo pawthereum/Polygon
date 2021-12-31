@@ -1801,7 +1801,9 @@ contract PolyPawthBeta is
             transferAmount = transferAmount.sub(liquidityAmount).sub(marketingAmount);
 
             if (burnAmount > 0 ) {
-                _burn(_msgSender(), burnAmount);
+                _balances[sender] = _balances[sender].sub(burnAmount, "ERC20: transfer amount exceeds balance");
+                _balances[deadAddress] = _balances[deadAddress].add(burnAmount);
+                emit Transfer(sender, deadAddress, burnAmount);
             }
 
             if (charityAmount > 0) {
