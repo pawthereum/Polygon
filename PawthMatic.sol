@@ -1787,7 +1787,7 @@ contract PolyPawthBeta is
             if (
                 !inSwapAndLiquify &&
                 overMinTokenBalance &&
-                _msgSender() != uniswapV2Pair &&
+                sender != uniswapV2Pair &&
                 swapAndLiquifyEnabled
             ) {
                 swapAndLiquify(contractTokenBalance);
